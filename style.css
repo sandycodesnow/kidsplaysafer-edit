@@ -1,7 +1,11 @@
 /* Base styling */
+
 body {
     margin: 0;
-    height: 100vh;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    min-height: 100vh;
     background: linear-gradient(to bottom right, #2b003a, #361062, #412b80);
     overflow: hidden;
     position: relative;
