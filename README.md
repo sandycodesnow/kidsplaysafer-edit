@@ -4,7 +4,7 @@ Here’s a step-by-step guide for updating the questions in your `Question Game`
 
 ### Step 1: Find the Questions Section
 
-1. Open the HTML file on GitHub and click on the **Edit** (pencil icon) to make changes.
+1. Open the `question.html` file on GitHub and click on the **Edit** (pencil icon) to make changes.
 2. Scroll down to the `const questions = [...]` part in the JavaScript section of the code. This is where all questions, answers, and translations are stored.
 
 ### Step 2: Understanding the Question Structure
