@@ -15,18 +15,21 @@ const totalQuestions = 2;
 function changeTurn() {
     if (currentTurn === "child") {
         currentTurn = "parent";
-        avatar.src = 'parent-icon.bmp'; // Swap to parent avatar (parent-icon.bmp)
+        avatar.src = 'parent-icon.bmp';
         turnText.textContent = "parent, it's your turn";
-        resetAnswers();  // Reset selected answers for the parent
+        resetAnswers();
         nextButton.disabled = true;
-    } else if (currentTurn === "results") {
-        // Redirect to the next question dynamically
-        redirectToNextQuestion();
-    } else {
-        // Both turns completed, compare answers
+    } else if (currentTurn === "parent") {
+        currentTurn = "results";  // Move to results after parent turn
         checkAnswers();
+    } else if (currentTurn === "results") {
+        redirectToNextQuestion();  // Move to the next question
+        currentTurn = "child";  // Reset turn to child for the next question
+        avatar.src = 'child-icon.bmp';
+        turnText.textContent = "child, it's your turn";
     }
 }
+
 
 // Function to go back to previous turn or redirect
 function goBack() {
