@@ -108,13 +108,11 @@
         let currentTurn = "child";
         let selectedLanguage = 'en';
     
-        // Persistent storage for answers for each question
-        let q1_child_answer = null;
-        let q1_parent_answer = null;
-        let q2_child_answer = null;
-        let q2_parent_answer = null;
-        let q3_child_answer = null;
-        let q3_parent_answer = null;
+        // Store responses dynamically for each turn and question index
+        const responses = {
+            child: {},
+            parent: {}
+        };
     
         const avatar = document.getElementById('avatar');
         const turnText = document.getElementById('turn-text');
@@ -135,6 +133,11 @@
                 title: { en: "Question 2", zh: "问题 2", ms: "Soalan 2", hi: "प्रश्न 2" },
                 text: { en: "A stranger online wants to meet you. What should you do?", zh: "网上的陌生人想见你。你应该怎么做？", ms: "Orang asing dalam talian ingin bertemu dengan anda. Apa yang patut anda lakukan?", hi: "ऑनलाइन एक अजनबी आपसे मिलना चाहता है। आपको क्या करना चाहिए?" },
                 answers: { en: ["Agree to meet", "Tell a trusted adult", "Ignore the request"], zh: ["同意见面", "告诉信任的成年人", "忽略请求"], ms: ["Setuju untuk bertemu", "Beritahu orang dewasa yang dipercayai", "Abaikan permintaan"], hi: ["मिलने के लिए सहमत हों", "विश्वासपात्र वयस्क को बताएं", "अनुरोध को नजरअंदाज करें"] }
+            },
+            {
+                title: { en: "Question 3", zh: "问题 3", ms: "Soalan 3", hi: "प्रश्न 3" },
+                text: { en: "You receive a suspicious message asking for your personal details. What should you do?", zh: "你收到一条要求提供个人信息的可疑消息。你应该怎么做？", ms: "Anda menerima mesej mencurigakan yang meminta maklumat peribadi anda. Apa yang patut anda lakukan?", hi: "आपको अपने व्यक्तिगत विवरण मांगने वाला एक संदिग्ध संदेश मिलता है। आपको क्या करना चाहिए?" },
+                answers: { en: ["Reply with details", "Delete the message", "Tell a trusted adult"], zh: ["回复详细信息", "删除消息", "告诉信任的成年人"], ms: ["Balas dengan butiran", "Padam mesej", "Beritahu orang dewasa yang dipercayai"], hi: ["विवरण के साथ जवाब दें", "संदेश हटाएं", "विश्वासपात्र वयस्क को बताएं"] }
             },
             {
                 title: { en: "Question 3", zh: "问题 3", ms: "Soalan 3", hi: "प्रश्न 3" },
@@ -215,20 +218,12 @@
         function handleAnswerSelection(button) {
             const selectedAnswer = button.textContent;
     
-            if (currentTurn === "child") {
-                if (currentQuestionIndex === 0) q1_child_answer = selectedAnswer;
-                if (currentQuestionIndex === 1) q2_child_answer = selectedAnswer;
-                if (currentQuestionIndex === 2) q3_child_answer = selectedAnswer;
-                button.style.backgroundColor = "#6495ED";
-                button.style.color = "white";
-            } else if (currentTurn === "parent") {
-                if (currentQuestionIndex === 0) q1_parent_answer = selectedAnswer;
-                if (currentQuestionIndex === 1) q2_parent_answer = selectedAnswer;
-                if (currentQuestionIndex === 2) q3_parent_answer = selectedAnswer;
-                button.style.backgroundColor = "#FF69B4";
-                button.style.color = "white";
-            }
-            
+            // Store response dynamically by index and turn
+            responses[currentTurn][currentQuestionIndex] = selectedAnswer;
+
+            button.style.backgroundColor = currentTurn === "child" ? "#6495ED" : "#FF69B4";
+            button.style.color = "white";
+    
             answerButtons.forEach(btn => {
                 if (btn !== button) {
                     btn.style.backgroundColor = "";
@@ -240,17 +235,8 @@
         }
     
         function checkAnswers() {
-            let childAnswer, parentAnswer;
-            if (currentQuestionIndex === 0) {
-                childAnswer = q1_child_answer;
-                parentAnswer = q1_parent_answer;
-            } else if (currentQuestionIndex === 1) {
-                childAnswer = q2_child_answer;
-                parentAnswer = q2_parent_answer;
-            } else if (currentQuestionIndex === 2) {
-                childAnswer = q3_child_answer;
-                parentAnswer = q3_parent_answer;
-            }
+            const childAnswer = responses.child[currentQuestionIndex];
+            const parentAnswer = responses.parent[currentQuestionIndex];
     
             currentTurn = "results";
     
@@ -320,6 +306,5 @@
         loadQuestion(currentQuestionIndex);
         updateTextContent();
     </script>
-    
 </body>
 </html>
