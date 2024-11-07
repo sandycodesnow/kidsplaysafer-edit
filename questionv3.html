@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Question Game</title>
+    <!-- Ensure the viewport meta tag is correctly set -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include your Google Fonts link -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Include your CSS styles -->
+    <style>
+        /* Base styling */
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(to bottom right, #2b003a, #361062, #412b80);
+            overflow-x: hidden; /* Prevent horizontal overflow */
+            position: relative;
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column; /* Ensure column layout for small screens */
+            text-align: center; /* Align text in the center for responsiveness */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Container for the box */
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* Box styling */
+        .box {
+            background-color: #1d0033; /* Dark purple background */
+            padding: 20px;
+            width: 100%;
+            border-radius: 25px; /* Rounded corners */
+            border: 10px solid #867dff; /* Light purple border */
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); /* Soft shadow */
+            color: white;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        /* Question Title */
+        .question-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #d3cbe4;
+        }
+
+        /* Avatar */
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+
+        /* Turn text */
+        #turn-text {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        /* Question styling */
+        .question {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        /* Answer buttons styling */
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .answer-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .answer-button {
+            flex: 1;
+            padding: 15px;
+            background-color: transparent;
+            color: white;
+            border-radius: 50px;
+            border: 2px solid white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .answer-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Lightbulb */
+        .lightbulb {
+            display: inline-block;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            color: #FFD700;
+        }
+
+        /* Navigation buttons */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .nav-button {
+            padding: 15px 40px;
+            background-color: transparent;
+            color: white;
+            border-radius: 50px;
+            border: 2px solid white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            font-size: 16px;
+        }
+
+        .nav-button:hover {
+            transform: scale(1.05);
+        }
+
+        #next:disabled,
+        #back:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stars-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Hide overflowing stars */
+            pointer-events: none; /* Allow clicks through the stars */
+            z-index: -1; /* Place behind other content */
+        }
+        /* Falling stars with gradient */
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 50px; /* Adjust height to create the tail effect */
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2));
+            animation: fall 2.5s linear infinite;
+            opacity: 0.3; /* Add some opacity for a subtle effect */
+            will-change: transform; /* Optimize animation performance */
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translate(0, -100px) rotate(45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(100vw, 100vh) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        /* Generate random stars with varying delays */
+        .star:nth-child(1) {
+            top: -100px;
+            left: 0;
+            animation-delay: 0s;
+        }
+        .star:nth-child(2) {
+            top: -150px;
+            left: 20%;
+            animation-delay: 1s;
+        }
+        .star:nth-child(3) {
+            top: -200px;
+            left: 40%;
+            animation-delay: 2s;
+        }
+        .star:nth-child(4) {
+            top: -250px;
+            left: 60%;
+            animation-delay: 3s;
+        }
+        .star:nth-child(5) {
+            top: -300px;
+            left: 80%;
+            animation-delay: 0.5s;
+        }
+        .star:nth-child(6) {
+            top: -350px;
+            left: 50%;
+            animation-delay: 1.5s;
+        }
+
+        /* Media Query for responsiveness */
+        @media (max-width: 768px) {
+            /* Adjust the font size for small screens */
+            .question-title {
+                font-size: 20px;
+            }
+
+            #turn-text {
+                font-size: 18px;
+            }
+
+            .question {
+                font-size: 16px;
+            }
+
+            .answer-button {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .nav-button {
+                padding: 12px 30px;
+                font-size: 14px;
+            }
+
+            .avatar {
+                width: 80px;
+                height: 80px;
+            }
+
+            .box {
+                padding: 15px;
+            }
+        }
+
+        /* Media Query for extra small screens */
+        @media (max-width: 480px) {
+            /* Further adjustments for very small screens */
+            .question-title {
+                font-size: 18px;
+            }
+
+            #turn-text {
+                font-size: 16px;
+            }
+
+            .question {
+                font-size: 14px;
+            }
+
+            .answer-button {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .nav-button {
+                padding: 10px 20px;
+                font-size: 12px;
+            }
+
+            .avatar {
+                width: 60px;
+                height: 60px;
+            }
+
+            .box {
+                padding: 10px;
+            }
+        }
+
+        /* Styles for the modal components */
+        /* Language Modal */
+        .language-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .language-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 90%;
+            max-width: 300px;
+            font-family: 'Nunito', sans-serif;
+            box-sizing: border-box;
+        }
+        .language-modal-content h2 {
+            margin-bottom: 20px;
+        }
+        .language-option {
+            margin: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+            transition: background-color 0.3s;
+        }
+        .language-option:hover {
+            background-color: #e0e0e0;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #333;
+        }
+        .open-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        /* Explanation Modal */
+        .explanation-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .explanation-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            font-family: 'Nunito', sans-serif;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .close-modal-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Modal -->
+    <button class="open-modal-btn" onclick="openLanguageModal()">Select Language</button>
+    <div class="language-modal" id="language-modal">
+        <div class="language-modal-content">
+            <h2>Select Your Language</h2>
+            <div class="language-option" onclick="selectLanguage('en')">English</div>
+            <div class="language-option" onclick="selectLanguage('zh')">中文 (Chinese)</div>
+            <div class="language-option" onclick="selectLanguage('ms')">Bahasa Melayu (Malay)</div>
+            <div class="language-option" onclick="selectLanguage('hi')">हिन्दी (Hindi)</div>
+        </div>
+    </div>
+
+    <!-- Explanation Modal with Close button -->
+    <div class="explanation-modal" id="explanation-modal">
+        <div class="explanation-modal-content">
+            <button class="close-modal" onclick="closeExplanationModal()">×</button>
+            <h2 id="explanation-title">Why is this the best answer?</h2>
+            <p id="explanation-text"></p>
+            <!-- Added Close button -->
+            <button class="close-modal-btn" onclick="closeExplanationModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Falling Stars Animation -->
+    <div class="stars-wrapper">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+
+    <!-- Game Structure -->
+    <div class="container">
+        <div class="box">
+            <h2 class="question-title" id="question-title">Question 1</h2>
+            <img src="child-icon.bmp" class="avatar" id="avatar" alt="child-avatar">
+            <h3 id="turn-text">Child, it's your turn</h3>
+            <p class="question" id="question-text">Your friend asks for your phone number. What should you do?</p>
+
+            <div class="answers">
+                <!-- Answer buttons will be dynamically generated here -->
+            </div>
+
+            <div class="navigation">
+                <button class="nav-button" id="back" disabled>BACK</button>
+                <button class="nav-button" id="next" disabled>NEXT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript code -->
+    <script>
+        let currentTurn = "child";
+        let selectedLanguage = 'en';
+        const responses = {
+            child: Object.create(null),
+            parent: Object.create(null),
+            results: Object.create(null)
+        };
+        
+        // Your questions array remains the same...
+        const questions = [
+            {
+                title: { en: "Question 1", zh: "问题 1", ms: "Soalan 1", hi: "प्रश्न 1" },
+                text: {
+                    en: "Your friend asks for your phone number. What should you do?",
+                    zh: "你的朋友向你要电话号码。你应该怎么做？",
+                    ms: "Rakan anda meminta nombor telefon anda. Apa yang patut anda lakukan?",
+                    hi: "आपका मित्र आपका फोन नंबर मांगता है। आपको क्या करना चाहिए?"
+                },
+                answers: {
+                    en: ["Tell Mummy/Daddy", "Give the phone number", "Don't give the phone number"],
+                    zh: ["告诉爸爸/妈妈", "给出电话号码", "不告诉电话号码"],
+                    ms: ["Beritahu Ibu/Bapa", "Berikan nombor telefon", "Tidak memberikan nombor telefon"],
+                    hi: ["मम्मी/डैडी को बताएं", "फोन नंबर दें", "फोन नंबर न दें"]
+                },
+                correct: {
+                    answer: {
+                        en: "Tell Mummy/Daddy",
+                        zh: "告诉爸爸/妈妈",
+                        ms: "Beritahu Ibu/Bapa",
+                        hi: "मम्मी/डैडी को बताएं"
+                    },
+                    reason: {
+                        en: "It's important to tell your parents when someone asks for personal information so they can guide you.",
+                        zh: "当有人询问你的个人信息时，告诉父母很重要，他们可以指导你。",
+                        ms: "Adalah penting untuk memberitahu ibu bapa anda apabila seseorang meminta maklumat peribadi supaya mereka boleh membimbing anda.",
+                        hi: "जब कोई आपकी व्यक्तिगत जानकारी मांगे, तो अपने माता-पिता को बताना महत्वपूर्ण है ताकि वे आपका मार्गदर्शन कर सकें।"
+                    }
+                }
+            },
+            {
+                title: { en: "Question 2", zh: "问题 2", ms: "Soalan 2", hi: "प्रश्न 2" },
+                text: {
+                    en: "A stranger online wants to meet you. What should you do?",
+                    zh: "网上的陌生人想见你。你应该怎么做？",
+                    ms: "Orang asing dalam talian ingin bertemu dengan anda. Apa yang patut anda lakukan?",
+                    hi: "ऑनलाइन एक अजनबी आपसे मिलना चाहता है। आपको क्या करना चाहिए?"
+                },
+                answers: {
+                    en: ["Agree to meet", "Tell a trusted adult", "Ignore the request"],
+                    zh: ["同意见面", "告诉信任的成年人", "忽略请求"],
+                    ms: ["Setuju untuk bertemu", "Beritahu orang dewasa yang dipercayai", "Abaikan permintaan"],
+                    hi: ["मिलने के लिए सहमत हों", "विश्वासपात्र वयस्क को बताएं", "अनुरोध को नजरअंदाज करें"]
+                },
+                correct: {
+                    answer: {
+                        en: "Tell a trusted adult",
+                        zh: "告诉信任的成年人",
+                        ms: "Beritahu orang dewasa yang dipercayai",
+                        hi: "विश्वासपात्र वयस्क को बताएं"
+                    },
+                    reason: {
+                        en: "Informing a trusted adult ensures your safety and they can handle the situation appropriately.",
+                        zh: "告知信任的成年人可以确保你的安全，他们会妥善处理。",
+                        ms: "Memaklumkan orang dewasa yang dipercayai memastikan keselamatan anda dan mereka boleh menangani situasi dengan sewajarnya.",
+                        hi: "विश्वासपात्र वयस्क को बताने से आपकी सुरक्षा सुनिश्चित होती है और वे स्थिति को उचित तरीके से संभाल सकते हैं।"
+                    }
+                }
+            },
+            // Add additional questions here...
+        ];
+    
+        const avatar = document.getElementById('avatar');
+        const turnText = document.getElementById('turn-text');
+        const nextButton = document.getElementById('next');
+        const backButton = document.getElementById('back');
+        const questionTitle = document.getElementById('question-title');
+        const questionText = document.getElementById('question-text');
+        const languageModal = document.getElementById('language-modal');
+        const explanationModal = document.getElementById('explanation-modal');
+        
+        let currentQuestionIndex = 0;
+    
+        function openExplanationModal(explanation) {
+            document.getElementById('explanation-text').textContent = explanation;
+            explanationModal.style.display = 'flex';
+        }
+    
+        function closeExplanationModal() {
+            explanationModal.style.display = 'none';
+        }
+    
+        function addLightbulb(correctAnswer) {
+            const answerContainers = document.querySelectorAll('.answer-container');
+            answerContainers.forEach(container => {
+                // Remove any existing lightbulbs
+                const existingLightbulb = container.querySelector('.lightbulb');
+                if (existingLightbulb) {
+                    existingLightbulb.remove();
+                }
+                const button = container.querySelector('.answer-button');
+                if (button.textContent === correctAnswer) {
+                    const lightbulb = document.createElement('span');
+                    lightbulb.className = 'lightbulb';
+                    lightbulb.innerHTML = '💡';
+                    lightbulb.onclick = (e) => {
+                        e.stopPropagation(); // Prevent button click
+                        openExplanationModal(questions[currentQuestionIndex].correct.reason[selectedLanguage]);
+                    };
+                    container.appendChild(lightbulb);
+                }
+            });
+        }
+    
+        function checkAnswers() {
+            const childAnswer = responses.child[currentQuestionIndex];
+            const parentAnswer = responses.parent[currentQuestionIndex];
+            const correctAnswer = questions[currentQuestionIndex].correct.answer[selectedLanguage];
+    
+            currentTurn = "results";
+    
+            if (childAnswer === parentAnswer) {
+                turnText.textContent = getTranslation("Amazing! Your choices are the same!");
+            } else {
+                turnText.textContent = getTranslation("Uh Oh! Looks like you two don't agree");
+            }
+    
+            // Update button colors
+            const answerButtons = document.querySelectorAll('.answer-button');
+            answerButtons.forEach(btn => {
+                if (btn.textContent === childAnswer) {
+                    btn.style.backgroundColor = "#6495ED";
+                    btn.style.color = "white";
+                }
+                if (btn.textContent === parentAnswer) {
+                    btn.style.backgroundColor = "#FF69B4";
+                    btn.style.color = "white";
+                }
+                if (btn.textContent !== childAnswer && btn.textContent !== parentAnswer) {
+                    btn.style.backgroundColor = "transparent";
+                    btn.style.color = "";
+                }
+            });
+    
+            // Add lightbulb to correct answer
+            addLightbulb(correctAnswer);
+            nextButton.disabled = false;
+        }
+    
+        function loadQuestion(index) {
+            const question = questions[index];
+            questionTitle.textContent = question.title[selectedLanguage];
+            questionText.textContent = question.text[selectedLanguage];
+            const answersDiv = document.querySelector('.answers');
+    
+            // Clear existing answers
+            answersDiv.innerHTML = '';
+    
+            // Create answer buttons inside 'answer-container' divs
+            question.answers[selectedLanguage].forEach(answerText => {
+                const answerContainer = document.createElement('div');
+                answerContainer.className = 'answer-container';
+    
+                const answerButton = document.createElement('button');
+                answerButton.className = 'answer-button';
+                answerButton.textContent = answerText;
+    
+                answerButton.addEventListener('click', () => handleAnswerSelection(answerButton));
+    
+                answerContainer.appendChild(answerButton);
+                answersDiv.appendChild(answerContainer);
+            });
+    
+            resetAnswers();
+    
+            // Reset currentTurn to "child" when loading a new question
+            currentTurn = "child";
+    
+            // Load previous answer if any
+            const childAnswer = responses.child[currentQuestionIndex];
+            if (childAnswer) {
+                const answerButtons = document.querySelectorAll('.answer-button');
+                answerButtons.forEach(btn => {
+                    if (btn.textContent === childAnswer) {
+                        btn.style.backgroundColor = "#6495ED";
+                        btn.style.color = "white";
+                    }
+                });
+                nextButton.disabled = false;
+            } else {
+                nextButton.disabled = true;
+            }
+    
+            // Set avatar and turn text
+            avatar.src = 'child-icon.bmp';
+            turnText.textContent = getTranslation("Child, it's your turn");
+    
+            // Set back button functionality
+            backButton.disabled = false;
+            backButton.onclick = goBack; // Always set to goBack
+        }
+    
+        function openLanguageModal() {
+            languageModal.style.display = 'flex';
+        }
+    
+        function closeLanguageModal() {
+            languageModal.style.display = 'none';
+        }
+    
+        function selectLanguage(language) {
+            selectedLanguage = language;
+            loadQuestion(currentQuestionIndex);
+            updateTextContent();
+            closeLanguageModal();
+        }
+    
+        function changeTurn() {
+            if (currentTurn === "child") {
+                currentTurn = "parent";
+                avatar.src = 'parent-icon.bmp';
+                turnText.textContent = getTranslation("Parent, it's your turn");
+                resetAnswers();
+    
+                // Load parent's previous answer if any
+                const parentAnswer = responses.parent[currentQuestionIndex];
+                if (parentAnswer) {
+                    const answerButtons = document.querySelectorAll('.answer-button');
+                    answerButtons.forEach(btn => {
+                        if (btn.textContent === parentAnswer) {
+                            btn.style.backgroundColor = "#FF69B4";
+                            btn.style.color = "white";
+                        }
+                    });
+                    nextButton.disabled = false;
+                } else {
+                    nextButton.disabled = true;
+                }
+            } else if (currentTurn === "parent") {
+                checkAnswers();
+            } else if (currentTurn === "results") {
+                redirectToNextQuestion();
+            }
+        }
+    
+        function goBack() {
+            if (currentTurn === "results") {
+                currentTurn = "parent";
+                avatar.src = 'parent-icon.bmp';
+                turnText.textContent = getTranslation("Parent, it's your turn");
+                resetAnswers();
+    
+                // Load parent's previous answer if any
+                const parentAnswer = responses.parent[currentQuestionIndex];
+                if (parentAnswer) {
+                    const answerButtons = document.querySelectorAll('.answer-button');
+                    answerButtons.forEach(btn => {
+                        if (btn.textContent === parentAnswer) {
+                            btn.style.backgroundColor = "#FF69B4";
+                            btn.style.color = "white";
+                        }
+                    });
+                    nextButton.disabled = false;
+                } else {
+                    nextButton.disabled = true;
+                }
+            } else if (currentTurn === "parent") {
+                currentTurn = "child";
+                avatar.src = 'child-icon.bmp';
+                turnText.textContent = getTranslation("Child, it's your turn");
+                resetAnswers();
+    
+                // Load child's previous answer if any
+                const childAnswer = responses.child[currentQuestionIndex];
+                if (childAnswer) {
+                    const answerButtons = document.querySelectorAll('.answer-button');
+                    answerButtons.forEach(btn => {
+                        if (btn.textContent === childAnswer) {
+                            btn.style.backgroundColor = "#6495ED";
+                            btn.style.color = "white";
+                        }
+                    });
+                    nextButton.disabled = false;
+                } else {
+                    nextButton.disabled = true;
+                }
+            } else if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            } else {
+                // At first question and currentTurn is 'child', redirect to home page
+                window.location.href = 'index.html';
+            }
+        }
+    
+        function handleAnswerSelection(button) {
+            const selectedAnswer = button.textContent;
+    
+            // Store response dynamically by index and turn
+            responses[currentTurn][currentQuestionIndex] = selectedAnswer;
+    
+            // Update the style of the selected button
+            button.style.backgroundColor = currentTurn === "child" ? "#6495ED" : "#FF69B4";
+            button.style.color = "white";
+    
+            // Reset the styles of the other buttons
+            const answerButtons = document.querySelectorAll('.answer-button');
+            answerButtons.forEach(btn => {
+                if (btn !== button) {
+                    btn.style.backgroundColor = "";
+                    btn.style.color = "";
+                }
+            });
+    
+            nextButton.disabled = false;
+        }
+    
+        function resetAnswers() {
+            const answerButtons = document.querySelectorAll('.answer-button');
+            answerButtons.forEach(btn => {
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            });
+        }
+    
+        function redirectToNextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            } else {
+                alert(getTranslation("End of questions. Thank you for playing!"));
+                window.location.href = 'index.html';
+            }
+        }
+    
+        function updateTextContent() {
+            turnText.textContent = currentTurn === 'child' ? getTranslation("Child, it's your turn") : getTranslation("Parent, it's your turn");
+            nextButton.textContent = getTranslation("NEXT");
+            backButton.textContent = getTranslation("BACK");
+        }
+    
+        function getTranslation(text) {
+            const translations = {
+                "Child, it's your turn": { en: "Child, it's your turn", zh: "孩子，该你了", ms: "Kanak-kanak, giliran anda", hi: "बच्चे, अब आपकी बारी है" },
+                "Parent, it's your turn": { en: "Parent, it's your turn", zh: "家长，该你了", ms: "Ibu bapa, giliran anda", hi: "माता-पिता, अब आपकी बारी है" },
+                "Amazing! Your choices are the same!": { en: "Amazing! Your choices are the same!", zh: "太棒了！你们的选择相同！", ms: "Hebat! Pilihan anda sama!", hi: "शानदार! आपके चयन समान हैं!" },
+                "Uh Oh! Looks like you two don't agree": { en: "Uh Oh! Looks like you two don't agree", zh: "哦哦！看来你们的意见不一致", ms: "Oh Tidak! Nampaknya anda berdua tidak setuju", hi: "ओह ओह! लगता है कि आप दोनों सहमत नहीं हैं" },
+                "NEXT": { en: "NEXT", zh: "下一步", ms: "SETERUSNYA", hi: "अगला" },
+                "BACK": { en: "BACK", zh: "返回", ms: "KEMBALI", hi: "वापस" },
+                "End of questions. Thank you for playing!": { en: "End of questions. Thank you for playing!", zh: "问题结束。谢谢参与！", ms: "Tamat soalan. Terima kasih kerana bermain!", hi: "प्रश्न समाप्त। खेलने के लिए धन्यवाद!" }
+            };
+            return translations[text][selectedLanguage] || text;
+        }
+    
+        nextButton.addEventListener('click', () => { currentTurn === "results" ? redirectToNextQuestion() : changeTurn(); });
+        backButton.addEventListener('click', goBack);
+        loadQuestion(currentQuestionIndex);
+        updateTextContent();
+    </script>
+    
+</body>
+</html>
