@@ -300,3 +300,17 @@ body {
     opacity: 0.5;
     cursor: not-allowed;
 }
+.answer-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.lightbulb {
+    display: inline-block;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #FFD700;
+}

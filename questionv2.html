@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Question Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Existing modal styles */
+        .language-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .language-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 300px;
+            font-family: 'Nunito', sans-serif;
+        }
+        .language-modal-content h2 {
+            margin-bottom: 20px;
+        }
+        .language-option {
+            margin: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+            transition: background-color 0.3s;
+        }
+        .language-option:hover {
+            background-color: #e0e0e0;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #333;
+        }
+        .open-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* New styles for explanation modal and lightbulb */
+        .explanation-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .explanation-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 500px;
+            position: relative;
+            font-family: 'Nunito', sans-serif;
+            text-align: center;
+        }
+        .lightbulb {
+            display: inline-block;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            color: #FFD700;
+        }
+        .answer-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .answers {
+            margin-top: 20px;
+        }
+        .answer-button {
+            flex: 1;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+        /* Styles for the new Close button in the explanation modal */
+        .close-modal-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Existing language modal -->
+    <button class="open-modal-btn" onclick="openLanguageModal()">Select Language</button>
+    <div class="language-modal" id="language-modal">
+        <div class="language-modal-content">
+            <h2>Select Your Language</h2>
+            <div class="language-option" onclick="selectLanguage('en')">English</div>
+            <div class="language-option" onclick="selectLanguage('zh')">中文 (Chinese)</div>
+            <div class="language-option" onclick="selectLanguage('ms')">Bahasa Melayu (Malay)</div>
+            <div class="language-option" onclick="selectLanguage('hi')">हिन्दी (Hindi)</div>
+        </div>
+    </div>
+
+    <!-- New explanation modal with Close button -->
+    <div class="explanation-modal" id="explanation-modal">
+        <div class="explanation-modal-content">
+            <button class="close-modal" onclick="closeExplanationModal()">×</button>
+            <h2 id="explanation-title">Why is this the best answer?</h2>
+            <p id="explanation-text"></p>
+            <!-- Added Close button -->
+            <button class="close-modal-btn" onclick="closeExplanationModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Game Structure -->
+    <div class="star"></div>
+    <div class="container">
+        <div class="box">
+            <h2 class="question-title" id="question-title">Question 1</h2>
+            <img src="child-icon.bmp" class="avatar" id="avatar" alt="child-avatar">
+            <h3 id="turn-text">Child, it's your turn</h3>
+            <p class="question" id="question-text">Your friend asks for your phone number. What should you do?</p>
+
+            <div class="answers">
+                <!-- Answer buttons will be dynamically generated here -->
+            </div>
+
+            <div class="navigation">
+                <button class="nav-button" id="back" disabled>BACK</button>
+                <button class="nav-button" id="next" disabled>NEXT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript code remains mostly the same -->
+    <script>
+        let currentTurn = "child";
+        let selectedLanguage = 'en';
+        const responses = {
+            child: Object.create(null),
+            parent: Object.create(null),
+            results: Object.create(null)
+        };
+        
+        // Updated questions array with correct answers and explanations
+        const questions = [
+    {
+        title: { en: "Question 1", zh: "问题 1", ms: "Soalan 1", hi: "प्रश्न 1" },
+        text: {
+            en: "Your friend asks for your phone number. What should you do?",
+            zh: "你的朋友向你要电话号码。你应该怎么做？",
+            ms: "Rakan anda meminta nombor telefon anda. Apa yang patut anda lakukan?",
+            hi: "आपका मित्र आपका फोन नंबर मांगता है। आपको क्या करना चाहिए?"
+        },
+        answers: {
+            en: ["Tell Mummy/Daddy", "Give the phone number", "Don't give the phone number"],
+            zh: ["告诉爸爸/妈妈", "给出电话号码", "不告诉电话号码"],
+            ms: ["Beritahu Ibu/Bapa", "Berikan nombor telefon", "Tidak memberikan nombor telefon"],
+            hi: ["मम्मी/डैडी को बताएं", "फोन नंबर दें", "फोन नंबर न दें"]
+        },
+        correct: {
+            answer: {
+                en: "Tell Mummy/Daddy",
+                zh: "告诉爸爸/妈妈",
+                ms: "Beritahu Ibu/Bapa",
+                hi: "मम्मी/डैडी को बताएं"
+            },
+            reason: {
+                en: "It's important to tell your parents when someone asks for personal information so they can guide you.",
+                zh: "当有人询问你的个人信息时，告诉父母很重要，他们可以指导你。",
+                ms: "Adalah penting untuk memberitahu ibu bapa anda apabila seseorang meminta maklumat peribadi supaya mereka boleh membimbing anda.",
+                hi: "जब कोई आपकी व्यक्तिगत जानकारी मांगे, तो अपने माता-पिता को बताना महत्वपूर्ण है ताकि वे आपका मार्गदर्शन कर सकें।"
+            }
+        }
+    },
+    {
+        title: { en: "Question 2", zh: "问题 2", ms: "Soalan 2", hi: "प्रश्न 2" },
+        text: {
+            en: "A stranger online wants to meet you. What should you do?",
+            zh: "网上的陌生人想见你。你应该怎么做？",
+            ms: "Orang asing dalam talian ingin bertemu dengan anda. Apa yang patut anda lakukan?",
+            hi: "ऑनलाइन एक अजनबी आपसे मिलना चाहता है। आपको क्या करना चाहिए?"
+        },
+        answers: {
+            en: ["Agree to meet", "Tell a trusted adult", "Ignore the request"],
+            zh: ["同意见面", "告诉信任的成年人", "忽略请求"],
+            ms: ["Setuju untuk bertemu", "Beritahu orang dewasa yang dipercayai", "Abaikan permintaan"],
+            hi: ["मिलने के लिए सहमत हों", "विश्वासपात्र वयस्क को बताएं", "अनुरोध को नजरअंदाज करें"]
+        },
+        correct: {
+            answer: {
+                en: "Tell a trusted adult",
+                zh: "告诉信任的成年人",
+                ms: "Beritahu orang dewasa yang dipercayai",
+                hi: "विश्वासपात्र वयस्क को बताएं"
+            },
+            reason: {
+                en: "Informing a trusted adult ensures your safety and they can handle the situation appropriately.",
+                zh: "告知信任的成年人可以确保你的安全，他们会妥善处理。",
+                ms: "Memaklumkan orang dewasa yang dipercayai memastikan keselamatan anda dan mereka boleh menangani situasi dengan sewajarnya.",
+                hi: "विश्वासपात्र वयस्क को बताने से आपकी सुरक्षा सुनिश्चित होती है और वे स्थिति को उचित तरीके से संभाल सकते हैं।"
+            }
+        }
+    },
+    {
+        title: { en: "Question 3", zh: "问题 3", ms: "Soalan 3", hi: "प्रश्न 3" },
+        text: {
+            en: "You receive a suspicious message asking for your personal details. What should you do?",
+            zh: "你收到一条要求提供个人信息的可疑消息。你应该怎么做？",
+            ms: "Anda menerima mesej mencurigakan yang meminta maklumat peribadi anda. Apa yang patut anda lakukan?",
+            hi: "आपको अपने व्यक्तिगत विवरण मांगने वाला एक संदिग्ध संदेश मिलता है। आपको क्या करना चाहिए?"
+        },
+        answers: {
+            en: ["Reply with details", "Delete the message", "Tell a trusted adult"],
+            zh: ["回复详细信息", "删除消息", "告诉信任的成年人"],
+            ms: ["Balas dengan butiran", "Padam mesej", "Beritahu orang dewasa yang dipercayai"],
+            hi: ["विवरण के साथ जवाब दें", "संदेश हटाएं", "विश्वासपात्र वयस्क को बताएं"]
+        },
+        correct: {
+            answer: {
+                en: "Tell a trusted adult",
+                zh: "告诉信任的成年人",
+                ms: "Beritahu orang dewasa yang dipercayai",
+                hi: "विश्वासपात्र वयस्क को बताएं"
+            },
+            reason: {
+                en: "A trusted adult can help you deal with suspicious messages safely.",
+                zh: "信任的成年人可以帮助你安全地处理可疑消息。",
+                ms: "Orang dewasa yang dipercayai boleh membantu anda menangani mesej mencurigakan dengan selamat.",
+                hi: "विश्वासपात्र वयस्क आपको संदिग्ध संदेशों से सुरक्षित रूप से निपटने में मदद कर सकते हैं।"
+            }
+        }
+    },
+    {
+        title: { en: "Question 4", zh: "问题 4", ms: "Soalan 4", hi: "प्रश्न 4" },
+        text: {
+            en: "Your classmate is being bullied online. What should you do?",
+            zh: "你的同学在网上被欺负。你应该怎么做？",
+            ms: "Rakan sekelas anda dibuli dalam talian. Apa yang patut anda lakukan?",
+            hi: "आपके सहपाठी को ऑनलाइन तंग किया जा रहा है। आपको क्या करना चाहिए?"
+        },
+        answers: {
+            en: ["Join in the bullying", "Ignore it", "Tell a trusted adult"],
+            zh: ["参与欺负", "忽略它", "告诉信任的成年人"],
+            ms: ["Turut serta dalam buli", "Abaikan", "Beritahu orang dewasa yang dipercayai"],
+            hi: ["तंग करने में शामिल हों", "अनदेखा करें", "विश्वासपात्र वयस्क को बताएं"]
+        },
+        correct: {
+            answer: {
+                en: "Tell a trusted adult",
+                zh: "告诉信任的成年人",
+                ms: "Beritahu orang dewasa yang dipercayai",
+                hi: "विश्वासपात्र वयस्क को बताएं"
+            },
+            reason: {
+                en: "Reporting the bullying to a trusted adult can help your classmate get the support they need.",
+                zh: "向信任的成年人报告欺凌可以帮助你的同学获得所需的支持。",
+                ms: "Melaporkan buli kepada orang dewasa yang dipercayai boleh membantu rakan sekelas anda mendapat sokongan yang mereka perlukan.",
+                hi: "विश्वासपात्र वयस्क को तंग करने की रिपोर्ट करने से आपके सहपाठी को आवश्यक समर्थन मिल सकता है।"
+            }
+        }
+    }
+];
+
+
+        const avatar = document.getElementById('avatar');
+        const turnText = document.getElementById('turn-text');
+        const nextButton = document.getElementById('next');
+        const backButton = document.getElementById('back');
+        const questionTitle = document.getElementById('question-title');
+        const questionText = document.getElementById('question-text');
+        const languageModal = document.getElementById('language-modal');
+        const explanationModal = document.getElementById('explanation-modal');
+        
+        let currentQuestionIndex = 0;
+
+        function openExplanationModal(explanation) {
+            document.getElementById('explanation-text').textContent = explanation;
+            explanationModal.style.display = 'flex';
+        }
+
+        function closeExplanationModal() {
+            explanationModal.style.display = 'none';
+        }
+
+        function addLightbulb(correctAnswer) {
+            const answerContainers = document.querySelectorAll('.answer-container');
+            answerContainers.forEach(container => {
+                // Remove any existing lightbulbs
+                const existingLightbulb = container.querySelector('.lightbulb');
+                if (existingLightbulb) {
+                    existingLightbulb.remove();
+                }
+                const button = container.querySelector('.answer-button');
+                if (button.textContent === correctAnswer) {
+                    const lightbulb = document.createElement('span');
+                    lightbulb.className = 'lightbulb';
+                    lightbulb.innerHTML = '💡';
+                    lightbulb.onclick = (e) => {
+                        e.stopPropagation(); // Prevent button click
+                        openExplanationModal(questions[currentQuestionIndex].correct.reason[selectedLanguage]);
+                    };
+                    container.appendChild(lightbulb);
+                }
+            });
+        }
+
+        function checkAnswers() {
+            const childAnswer = responses.child[currentQuestionIndex];
+            const parentAnswer = responses.parent[currentQuestionIndex];
+            const correctAnswer = questions[currentQuestionIndex].correct.answer[selectedLanguage];
+
+            currentTurn = "results";
+
+            if (childAnswer === parentAnswer) {
+                turnText.textContent = getTranslation("Amazing! Your choices are the same!");
+            } else {
+                turnText.textContent = getTranslation("Uh Oh! Looks like you two don't agree");
+            }
+
+            // Update button colors
+            const answerButtons = document.querySelectorAll('.answer-button');
+            answerButtons.forEach(btn => {
+                if (btn.textContent === childAnswer) {
+                    btn.style.backgroundColor = "#6495ED";
+                    btn.style.color = "white";
+                }
+                if (btn.textContent === parentAnswer) {
+                    btn.style.backgroundColor = "#FF69B4";
+                    btn.style.color = "white";
+                }
+                if (btn.textContent !== childAnswer && btn.textContent !== parentAnswer) {
+                    btn.style.backgroundColor = "transparent";
+                    btn.style.color = "";
+                }
+            });
+
+            // Add lightbulb to correct answer
+            addLightbulb(correctAnswer);
+            nextButton.disabled = false;
+        }
+
+        function loadQuestion(index) {
+            const question = questions[index];
+            questionTitle.textContent = question.title[selectedLanguage];
+            questionText.textContent = question.text[selectedLanguage];
+            const answersDiv = document.querySelector('.answers');
+
+            // Clear existing answers
+            answersDiv.innerHTML = '';
+
+            // Create answer buttons inside 'answer-container' divs
+            question.answers[selectedLanguage].forEach(answerText => {
+                const answerContainer = document.createElement('div');
+                answerContainer.className = 'answer-container';
+
+                const answerButton = document.createElement('button');
+                answerButton.className = 'answer-button';
+                answerButton.textContent = answerText;
+
+                answerButton.addEventListener('click', () => handleAnswerSelection(answerButton));
+
+                answerContainer.appendChild(answerButton);
+                answersDiv.appendChild(answerContainer);
+            });
+
+            resetAnswers();
+            currentTurn = "child";
+            avatar.src = 'child-icon.bmp';
+            turnText.textContent = getTranslation("Child, it's your turn");
+            nextButton.disabled = true;
+            
+            // Set back button functionality
+            backButton.disabled = false;
+            if (currentQuestionIndex === 0 && currentTurn === 'child') {
+                backButton.onclick = () => window.location.href = 'index.html';
+            } else {
+                backButton.onclick = goBack;
+            }
+        }
+
+        function openLanguageModal() {
+            languageModal.style.display = 'flex';
+        }
+
+        function closeLanguageModal() {
+            languageModal.style.display = 'none';
+        }
+
+        function selectLanguage(language) {
+            selectedLanguage = language;
+            loadQuestion(currentQuestionIndex);
+            updateTextContent();
+            closeLanguageModal();
+        }
+
+        function changeTurn() {
+            if (currentTurn === "child") {
+                currentTurn = "parent";
+                avatar.src = 'parent-icon.bmp';
+                turnText.textContent = getTranslation("Parent, it's your turn");
+                resetAnswers();
+                nextButton.disabled = true;
+            } else if (currentTurn === "parent") {
+                checkAnswers();
+            } else if (currentTurn === "results") {
+                redirectToNextQuestion();
+            }
+        }
+
+        function goBack() {
+            if (currentTurn === "parent") {
+                currentTurn = "child";
+                avatar.src = 'child-icon.bmp';
+                turnText.textContent = getTranslation("Child, it's your turn");
+                resetAnswers();
+                nextButton.disabled = true;
+            } else if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        function handleAnswerSelection(button) {
+            const selectedAnswer = button.textContent;
+
+            // Store response dynamically by index and turn
+            responses[currentTurn][currentQuestionIndex] = selectedAnswer;
+
+            // Update the style of the selected button
+            button.style.backgroundColor = currentTurn === "child" ? "#6495ED" : "#FF69B4";
+            button.style.color = "white";
+
+            // Reset the styles of the other buttons
+            const answerButtons = document.querySelectorAll('.answer-button');
+            answerButtons.forEach(btn => {
+                if (btn !== button) {
+                    btn.style.backgroundColor = "";
+                    btn.style.color = "";
+                }
+            });
+
+            nextButton.disabled = false;
+        }
+
+        function resetAnswers() {
+            const answerButtons = document.querySelectorAll('.answer-button');
+            answerButtons.forEach(btn => {
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            });
+        }
+
+        function redirectToNextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            } else {
+                alert(getTranslation("End of questions. Thank you for playing!"));
+                window.location.href = 'index.html';
+            }
+        }
+
+        function updateTextContent() {
+            turnText.textContent = currentTurn === 'child' ? getTranslation("Child, it's your turn") : getTranslation("Parent, it's your turn");
+            nextButton.textContent = getTranslation("NEXT");
+            backButton.textContent = getTranslation("BACK");
+        }
+
+        function getTranslation(text) {
+            const translations = {
+                "Child, it's your turn": { en: "Child, it's your turn", zh: "孩子，该你了", ms: "Kanak-kanak, giliran anda", hi: "बच्चे, अब आपकी बारी है" },
+                "Parent, it's your turn": { en: "Parent, it's your turn", zh: "家长，该你了", ms: "Ibu bapa, giliran anda", hi: "माता-पिता, अब आपकी बारी है" },
+                "Amazing! Your choices are the same!": { en: "Amazing! Your choices are the same!", zh: "太棒了！你们的选择相同！", ms: "Hebat! Pilihan anda sama!", hi: "शानदार! आपके चयन समान हैं!" },
+                "Uh Oh! Looks like you two don't agree": { en: "Uh Oh! Looks like you two don't agree", zh: "哦哦！看来你们的意见不一致", ms: "Oh Tidak! Nampaknya anda berdua tidak setuju", hi: "ओह ओह! लगता है कि आप दोनों सहमत नहीं हैं" },
+                "NEXT": { en: "NEXT", zh: "下一步", ms: "SETERUSNYA", hi: "अगला" },
+                "BACK": { en: "BACK", zh: "返回", ms: "KEMBALI", hi: "वापस" },
+                "End of questions. Thank you for playing!": { en: "End of questions. Thank you for playing!", zh: "问题结束。谢谢参与！", ms: "Tamat soalan. Terima kasih kerana bermain!", hi: "प्रश्न समाप्त। खेलने के लिए धन्यवाद!" }
+            };
+            return translations[text][selectedLanguage] || text;
+        }
+
+        nextButton.addEventListener('click', () => { currentTurn === "results" ? redirectToNextQuestion() : changeTurn(); });
+        backButton.addEventListener('click', goBack);
+        loadQuestion(currentQuestionIndex);
+        updateTextContent();
+    </script>
+</body>
+</html>
